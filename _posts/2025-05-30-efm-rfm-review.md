@@ -5,12 +5,12 @@ date: 2025-05-30
 math: true
 ---
 
-<!-- MathJax -->
+<!-- MathJax script for LaTeX rendering -->
 <script type="text/javascript" async
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
 </script>
 
-<!-- Styling for better spacing -->
+<!-- Extra styling for spacing -->
 <style>
 h2, h3 {
   margin-top: 2em;
