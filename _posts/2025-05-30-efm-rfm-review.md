@@ -42,36 +42,37 @@ math: true
 
 ## Table of Contents
 
-1. [Preliminary: What is Flow Matching](#fm-refresher)  
-2. [Part I – Equivariant Flow Matching (EFM)](#efm)  
-   - [2.1 Why standard OT-FM fails on symmetric data](#efm-motivation)  
-   - [2.2 Orbit-aligned cost & equivariant GNN](#efm-method)  
-   - [2.3 Empirical wins — Lennard-Jones 55 & alanine dipeptide](#efm-results)  
-3. [Part II – Riemannian Flow Matching (RFM)](#rfm)  
-   - [3.1 When Euclidean coordinates are curved](#rfm-motivation)  
-   - [3.2 Premetric trick: geodesic vs spectral distances](#rfm-method)  
-   - [3.3 Experiments — sphere, torus, bunny mesh, maze](#rfm-results)  
-4. [Common Threads & Diverging Strengths](#compare)  
+1. [Preliminary: What is Flow Matching](#fm-refresher)
+2. [Part I – Equivariant Flow Matching (EFM)](#efm)
+   - [2.1 Why standard OT-FM fails on symmetric data](#efm-motivation)
+   - [2.2 Orbit-aligned cost & equivariant GNN](#efm-method)
+   - [2.3 Empirical wins — Lennard-Jones 55 & alanine dipeptide](#efm-results)
+3. [Part II – Riemannian Flow Matching (RFM)](#rfm)
+   - [3.1 When Euclidean coordinates are curved](#rfm-motivation)
+   - [3.2 Premetric trick: geodesic vs spectral distances](#rfm-method)
+   - [3.3 Experiments — sphere, torus, bunny mesh, maze](#rfm-results)
+4. [Common Threads & Diverging Strengths](#compare)
 5. [Open Horizons](#outlook)
 
 ---
 
 <a name="fm-refresher"></a>
+
 ## 1 · Preliminary: What is Flow Matching
 
-Continuous Normalizing Flows (CNFs) learn a **vector field** \(v_\theta(t,x)\) so that integrating the ODE
+Continuous Normalizing Flows (CNFs) learn a **vector field** $v_\theta(t,x)$ so that integrating the ODE
 
 <div class="math-display">
-\[
+$$
 \dot x_t \;=\; v_\theta(t,x_t), \qquad t\in[0,1]
-\]
+$$
 </div>
 
 pushes a simple base density to a complex target.
 
 **Flow Matching (FM)** turns this into pure regression:
 
-1. Pick an “ideal” vector field \(u_t(x\mid x_1)\) that moves \(x\) along a straight line to \(x_1\).  
+1. Pick an “ideal” vector field \(u_t(x\mid x_1)\) that moves \(x\) along a straight line to \(x_1\).
 2. Minimize an MSE loss
 
 <div class="math-display">
@@ -80,14 +81,16 @@ pushes a simple base density to a complex target.
 \]
 </div>
 
-If \(u_t\) is *simple* (e.g. OT displacement), we can integrate the learned field with **just a few fixed RK4 steps** at inference time.
+If \(u_t\) is _simple_ (e.g. OT displacement), we can integrate the learned field with **just a few fixed RK4 steps** at inference time.
 
 ---
 
 <a name="efm"></a>
+
 ## 2 · Part I – Equivariant Flow Matching (EFM)
 
 <a name="efm-motivation"></a>
+
 ### 2.1 Why OT-FM meets symmetry hell 😵
 
 Take a Lennard-Jones cluster of 55 atoms.  
@@ -116,6 +119,7 @@ A mini-batch of 512 samples covers only \(\sim10^5\) pairs—**far too few** to 
 </table>
 
 <a name="efm-method"></a>
+
 ### 2.2 Orbit-aligned cost + equivariant field
 
 **Key formula**
@@ -131,13 +135,14 @@ where \(G = O(D)\times S(N)\) (rotations + permutations).
 
 **Implementation steps:**
 
-1. **Permutation alignment** — Hungarian algorithm  
-2. **Rotation alignment** — Kabsch algorithm  
-3. Hungarian again on \(\tilde c\) → OT plan on the *orbit* itself.
+1. **Permutation alignment** — Hungarian algorithm
+2. **Rotation alignment** — Kabsch algorithm
+3. Hungarian again on \(\tilde c\) → OT plan on the _orbit_ itself.
 
 The learned vector field is an **SE(3) × S(N) equivariant GNN**, ensuring the push-forward density stays symmetry-invariant.
 
 <a name="efm-results"></a>
+
 ### 2.3 What do we gain?
 
 <table>
@@ -171,15 +176,18 @@ EFM fixes symmetry with zero extra ODE cost.
 ---
 
 <a name="rfm"></a>
+
 ## 3 · Part II – Riemannian Flow Matching (RFM)
 
 <a name="rfm-motivation"></a>
+
 ### 3.1 When Euclidean coordinates are curved
 
 Spherical data, torus angles, mesh surfaces—flattening them breaks intrinsic distances.  
 We need “straight” **within** the manifold.
 
 <a name="rfm-method"></a>
+
 ### 3.2 Premetric trick 🔧
 
 **Theorem 3.1**  
@@ -192,26 +200,27 @@ u_t(x\mid x_1)
 \]
 </div>
 
-is the *minimal-norm* vector field that shrinks \(d(x_t,x_1)\) according to schedule \(\kappa(t)\).
+is the _minimal-norm_ vector field that shrinks \(d(x_t,x_1)\) according to schedule \(\kappa(t)\).
 
-> **Simple manifold** → choose **geodesic distance** → closed form  
+> **Simple manifold** → choose **geodesic distance** → closed form
 >
 > <div class="math-display">
->\[x_t = \exp_{x_1}\!\bigl((1-t)\,\log_{x_1}x_0\bigr)\]
+> \[x_t = \exp_{x_1}\!\bigl((1-t)\,\log_{x_1}x_0\bigr)\]
 > </div>
 >
 > → **0 ODE steps**
 
-> **General manifold** → choose **spectral distance**  
+> **General manifold** → choose **spectral distance**
 >
 > <div class="math-display">
->\[d_w^2(x,y)
-  = \sum_{i=1}^k w(\lambda_i)\bigl(\varphi_i(x)-\varphi_i(y)\bigr)^2\]
+> \[d_w^2(x,y)
+>   = \sum_{i=1}^k w(\lambda_i)\bigl(\varphi_i(x)-\varphi_i(y)\bigr)^2\]
 > </div>
 >
 > (one-time eigen solve) → **still divergence-free**
 
 <a name="rfm-results"></a>
+
 ### 3.3 Highlights
 
 <table>
@@ -260,6 +269,7 @@ is the *minimal-norm* vector field that shrinks \(d(x_t,x_1)\) according to sche
 ---
 
 <a name="compare"></a>
+
 ## 4 · Common Threads & Diverging Strengths
 
 <table>
@@ -300,12 +310,13 @@ is the *minimal-norm* vector field that shrinks \(d(x_t,x_1)\) according to sche
 ---
 
 <a name="outlook"></a>
+
 ## 5 · Open Horizons
 
-- Mixing both ideas: equivariant flows **on** manifolds (e.g., permutable atoms on a sphere)  
-- Adaptive or learned premetrics  
-- Memory-light eigen decomposition for mega-scale meshes  
-- Stochastic couplings & Brownian bridges within RFM  
+- Mixing both ideas: equivariant flows **on** manifolds (e.g., permutable atoms on a sphere)
+- Adaptive or learned premetrics
+- Memory-light eigen decomposition for mega-scale meshes
+- Stochastic couplings & Brownian bridges within RFM
 
 ---
 
