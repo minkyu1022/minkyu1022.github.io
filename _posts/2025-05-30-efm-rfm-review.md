@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Geometry-Aware Generative Paths: From Group Orbits to Premetrics"
+title: "[AI810] Blog post for reviewing papers"
 date: 2025-05-30
 math: true
 ---
