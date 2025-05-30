@@ -66,32 +66,51 @@ math: true
 
 ### 1.1 Flow Matching
 
+Flow Matching (FM) is a powerful framework for constructing continuous normalizing flows (CNFs) by learning a vector field that transports a simple, known base distribution $q(x_0)$ (such as a Gaussian) into a complex target distribution $\mu(x_1)$. The key idea is to define a continuous path $x_t$, governed by an ordinary differential equation (ODE):
+
+$$
+\frac{dx_t}{dt} = v_\theta(t, x_t), \quad t \in [0,1],
+$$
+
+where $v_\theta$ is a parameterized vector field (typically a neural network). By solving this ODE from $t=0$ to $t=1$, we transform samples from the base $q(x_0)$ to approximate samples from the target distribution $\mu(x_1)$.
+
+The training of Flow Matching simplifies to a regression problem. Given pairs $(x_0, x_1)$, we define a straightforward, "ideal" vector field $u_t(x_t \mid x_1)$, typically chosen as the direct path from $x_0$ to $x_1$. In Euclidean space, this vector field is often defined as:
+
+$$
+u_t(x_t \mid x_1) = \frac{x_1 - x_t}{1 - t},
+$$
+
+which represents the constant velocity required to arrive at $x_1$ by time $t = 1$.
+
+Training then proceeds by minimizing the mean squared error (MSE) loss between the learned vector field $v_\theta$ and the ideal vector field $u_t$:
+
+$$
+\mathcal{L}(\theta) = \mathbb{E}_{t \sim U[0,1], x_0 \sim q, x_1 \sim \mu}\left[\| v_\theta(t,x_t) - u_t(x_t \mid x_1) \|^2\right].
+$$
+
+The simplicity and computational efficiency of Flow Matching make it a popular choice, especially when integration at inference time can be performed with very few numerical steps.
+
+---
+
 <a name="ot"></a>
 
 ### 1.2 Optimal Transport (OT)
 
-Continuous Normalizing Flows (CNFs) learn a **vector field** $$v_\theta(t,x)$$ so that integrating the ODE
+Optimal Transport provides a principled way of measuring and computing the minimal cost of transporting mass from one probability distribution to another. Specifically, given two distributions $q(x_0)$ and $\mu(x_1)$, OT finds a coupling $\pi(x_0, x_1)$ that minimizes the expected transport cost:
 
-<div class="math-display">
 $$
-\dot x_t \;=\; v_\theta(t,x_t), \qquad t\in[0,1]
+\pi^\star = \underset{\pi \in \Pi(q, \mu)}{\mathrm{argmin}}\,\mathbb{E}_{(x_0,x_1) \sim \pi}[c(x_0, x_1)],
 $$
-</div>
 
-pushes a simple base density to a complex target.
+where $\Pi(q, \mu)$ is the set of all couplings whose marginals are $q$ and $\mu$, and $c(x_0, x_1)$ is the transport cost function, often chosen as the squared Euclidean distance $\|x_0 - x_1\|^2$.
 
-**Flow Matching (FM)** turns this into pure regression:
+In practice, OT frequently appears in Flow Matching as the canonical choice for defining the ideal vector field. The vector field constructed from OT paths provides a natural notion of "straightness" or minimal-energy path in the Euclidean setting. In this case, the same time-scaled vector field is used:
 
-1. Pick an “ideal” vector field $$u_t(x\mid x_1)$$ that moves $$x$$ along a straight line to $$x_1$$.
-2. Minimize an MSE loss
-
-<div class="math-display">
 $$
-\mathcal{L} \;=\; \mathbb{E}\Bigl\|\,v_\theta(t,x_t)\;-\;u_t(x_t\mid x_1)\Bigr\|^2.
+u_t(x_t \mid x_1) = \frac{x_1 - x_t}{1 - t}.
 $$
-</div>
 
-If $$u_t$$ is simple (e.g. OT displacement), we can integrate the learned field with **just a few fixed RK4 steps** at inference time.
+However, in the presence of symmetries or non-Euclidean geometries, naive OT coupling can produce suboptimal or "curved" paths. Addressing these limitations motivates approaches such as **Equivariant Flow Matching (EFM)**—which introduces symmetry-aware OT—and **Riemannian Flow Matching (RFM)**—which generalizes OT paths to curved, intrinsic geometries.
 
 ---
 
@@ -212,22 +231,22 @@ $$
 
 is the _minimal-norm_ vector field that shrinks $$d(x_t,x_1)$$ according to schedule $$\kappa(t)$$.
 
-> **Simple manifold** → choose **geodesic distance** → closed form
->
-> <div class="math-display">
-> $$x_t = \exp_{x_1}\!\bigl((1-t)\,\log_{x_1}x_0\bigr)$$
-> </div>
->
-> → **0 ODE steps**
+**Simple manifold** → choose **geodesic distance** → closed form
 
-> **General manifold** → choose **spectral distance**
->
-> <div class="math-display">
-> $$d_w^2(x,y)
->   = \sum_{i=1}^k w(\lambda_i)\bigl(\varphi_i(x)-\varphi_i(y)\bigr)^2$$
-> </div>
->
-> (one-time eigen solve) → **still divergence-free**
+<div class="math-display">
+$$x_t = \exp_{x_1}\!\bigl((1-t)\,\log_{x_1}x_0\bigr)$$
+</div>
+
+→ **0 ODE steps**
+
+**General manifold** → choose **spectral distance**
+
+<div class="math-display">
+$$d_w^2(x,y)
+  = \sum_{i=1}^k w(\lambda_i)\bigl(\varphi_i(x)-\varphi_i(y)\bigr)^2$$
+</div>
+
+(one-time eigen solve) → **still divergence-free**
 
 <a name="rfm-results"></a>
 
