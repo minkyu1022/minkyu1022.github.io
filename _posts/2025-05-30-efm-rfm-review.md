@@ -66,23 +66,23 @@ math: true
 
 ### 1.1 Flow Matching
 
-Flow Matching (FM) is a powerful framework for constructing continuous normalizing flows (CNFs) by learning a vector field that transports a simple, known base distribution $q(x_0)$ (such as a Gaussian) into a complex target distribution $\mu(x_1)$. The key idea is to define a continuous path $x_t$, governed by an ordinary differential equation (ODE):
+Flow Matching (FM) is a powerful framework for constructing continuous normalizing flows (CNFs) by learning a vector field that transports a simple, known base distribution $$q(x_0)$$ (such as a Gaussian) into a complex target distribution $$\mu(x_1)$$. The key idea is to define a continuous path $$x_t$$, governed by an ordinary differential equation (ODE):
 
 $$
 \frac{dx_t}{dt} = v_\theta(t, x_t), \quad t \in [0,1],
 $$
 
-where $v_\theta$ is a parameterized vector field (typically a neural network). By solving this ODE from $t=0$ to $t=1$, we transform samples from the base $q(x_0)$ to approximate samples from the target distribution $\mu(x_1)$.
+where $$v_\theta$$ is a parameterized vector field (typically a neural network). By solving this ODE from $$t=0$$ to $$t=1$$, we transform samples from the base $$q(x_0)$$ to approximate samples from the target distribution $$\mu(x_1)$$.
 
-The training of Flow Matching simplifies to a regression problem. Given pairs $(x_0, x_1)$, we define a straightforward, "ideal" vector field $u_t(x_t \mid x_1)$, typically chosen as the direct path from $x_0$ to $x_1$. In Euclidean space, this vector field is often defined as:
+The training of Flow Matching simplifies to a regression problem. Given pairs $$(x_0, x_1)$$, we define a straightforward, "ideal" vector field $$u_t(x_t \mid x_1)$$, typically chosen as the direct path from $$x_0$ to $x_1$$. In Euclidean space, this vector field is often defined as:
 
 $$
 u_t(x_t \mid x_1) = \frac{x_1 - x_t}{1 - t},
 $$
 
-which represents the constant velocity required to arrive at $x_1$ by time $t = 1$.
+which represents the constant velocity required to arrive at $$x_1$$ by time $$t = 1$$.
 
-Training then proceeds by minimizing the mean squared error (MSE) loss between the learned vector field $v_\theta$ and the ideal vector field $u_t$:
+Training then proceeds by minimizing the mean squared error (MSE) loss between the learned vector field $$v_\theta$$ and the ideal vector field $$u_t$$:
 
 $$
 \mathcal{L}(\theta) = \mathbb{E}_{t \sim U[0,1], x_0 \sim q, x_1 \sim \mu}\left[\| v_\theta(t,x_t) - u_t(x_t \mid x_1) \|^2\right].
@@ -96,13 +96,13 @@ The simplicity and computational efficiency of Flow Matching make it a popular c
 
 ### 1.2 Optimal Transport (OT)
 
-Optimal Transport provides a principled way of measuring and computing the minimal cost of transporting mass from one probability distribution to another. Specifically, given two distributions $q(x_0)$ and $\mu(x_1)$, OT finds a coupling $\pi(x_0, x_1)$ that minimizes the expected transport cost:
+Optimal Transport provides a principled way of measuring and computing the minimal cost of transporting mass from one probability distribution to another. Specifically, given two distributions $$q(x_0)$$ and $$\mu(x_1)$$, OT finds a coupling $$\pi(x_0, x_1)$$ that minimizes the expected transport cost:
 
 $$
 \pi^\star = \underset{\pi \in \Pi(q, \mu)}{\mathrm{argmin}}\,\mathbb{E}_{(x_0,x_1) \sim \pi}[c(x_0, x_1)],
 $$
 
-where $\Pi(q, \mu)$ is the set of all couplings whose marginals are $q$ and $\mu$, and $c(x_0, x_1)$ is the transport cost function, often chosen as the squared Euclidean distance $\|x_0 - x_1\|^2$.
+where $$\Pi(q, \mu)$$ is the set of all couplings whose marginals are $$q$$ and $$\mu$$, and $$c(x_0, x_1)$$ is the transport cost function, often chosen as the squared Euclidean distance $$\|x_0 - x_1\|^2$$.
 
 In practice, OT frequently appears in Flow Matching as the canonical choice for defining the ideal vector field. The vector field constructed from OT paths provides a natural notion of "straightness" or minimal-energy path in the Euclidean setting. In this case, the same time-scaled vector field is used:
 
