@@ -36,15 +36,6 @@ th, td {
 }
 </style>
 
----
-
-layout: post
-title: "Geometry-Aware Generative Paths: From Group Orbits to Premetrics"
-date: 2025-05-30
-math: true
-
----
-
 # Geometry-Aware Generative Paths: From Group Orbits to Premetrics
 
 **Review of “Equivariant Flow Matching” (NeurIPS 2023) & “Flow Matching on General Geometries” (ICLR 2024)**
