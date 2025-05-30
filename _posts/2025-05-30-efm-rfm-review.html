@@ -1,0 +1,191 @@
+---
+layout: post
+title: "Geometry-Aware Generative Paths: From Group Orbits to Premetrics"
+date: 2025-05-30
+---
+
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+<html><body>
+
+<h1>Geometry-Aware Generative Paths: From Group Orbits to Premetrics  </h1>
+<p><strong>Review of “Equivariant Flow Matching” (NeurIPS 2023) &amp;amp; “Flow Matching on General Geometries” (ICLR 2024)</strong>  </p>
+
+<blockquote>*One fixes crooked paths by aligning external symmetries; the other bends the space itself so every path becomes straight again.*</blockquote>
+
+<hr/>
+
+<h2>Table of Contents</h2>
+<ol>
+<li>[A 60-Second Refresher on Flow Matching](#fm-refresher)  </li>
+<ol>
+<li>[Part I – Equivariant Flow Matching (EFM)](#efm)  </li>
+</ol>
+<p>   2.1 [Why standard OT-FM fails on symmetric data](#efm-motivation)  </p>
+<p>   2.2 [Orbit-aligned cost &amp; equivariant GNN](#efm-method)  </p>
+<p>   2.3 [Empirical wins — Lennard-Jones 55 &amp; alanine dipeptide](#efm-results)  </p>
+<ol>
+<li>[Part II – Riemannian Flow Matching (RFM)](#rfm)  </li>
+</ol>
+<p>   3.1 [When Euclidean coordinates are the real problem](#rfm-motivation)  </p>
+<p>   3.2 [Premetric trick: geodesic vs spectral distances](#rfm-method)  </p>
+<p>   3.3 [Experiments — sphere, torus, bunny mesh, maze](#rfm-results)  </p>
+<ol>
+<li>[Common Threads &amp; Diverging Strengths](#compare)  </li>
+<ol>
+<li>[Open Horizons](#outlook)</li>
+</ol>
+
+<hr/>
+
+<p>&lt;a name=&quot;fm-refresher&quot;&gt;&lt;/a&gt;</p>
+<h2>1 · A 60-Second Refresher on Flow Matching</h2>
+
+<p>Continuous Normalizing Flows (CNFs) learn a <strong>vector field</strong> \(v_\theta(t,x)\) so that integrating the ODE  </p>
+<p>\[\dot x_t = v_\theta(t,x_t), \qquad t\in[0,1]\]</p>
+<p>pushes a simple base density to a complex target.  </p>
+
+<p><strong>Flow Matching (FM)</strong> turns this into pure regression:  </p>
+<ol>
+<li>Pick an “ideal” vector field \(u_t(x\mid x_1)\) that would move \(x\) to \(x_1\) in straight line.  </li>
+<ol>
+<li>Minimize an MSE loss  </li>
+</ol>
+<p>\[\mathcal L = \mathbb E\bigl\left\|v_\theta(t,x_t)-u_t(x_t\mid x_1)\bigr\right\|^2.</p>
+<p>\]  </p>
+
+<p>If \(u_t\) is <em>simple</em> (e.g. OT displacement), we can integrate the learned field with <strong>just a few fixed RK4 steps</strong> at inference time.</p>
+
+<hr/>
+
+<p>&lt;a name=&quot;efm&quot;&gt;&lt;/a&gt;</p>
+<h2>2 · Part I – Equivariant Flow Matching (EFM)</h2>
+
+<p>&lt;a name=&quot;efm-motivation&quot;&gt;&lt;/a&gt;</p>
+<h3>2.1 When OT-FM meets symmetry hell 😵</h3>
+
+<p>Take a Lennard-Jones cluster of 55 atoms.  </p>
+<p><em>One</em> configuration has \(55!\times 8\pi^2\) symmetry copies (permutations × rotations).  </p>
+<p>A mini-batch of size 512 samples only \(\sim10^5\) pairs—<strong>far too few</strong> to hit the “right” copy.  </p>
+
+<p>Outcome with vanilla OT-FM:</p>
+
+<p>| | consequence |</p>
+<p>|---|---|</p>
+<p>| OT assignment matches <em>different</em> symmetry orbits | vector field must “bend” to undo mismatch |</p>
+<p>| crooked paths | need smaller ODE step → slow inference |</p>
+
+<p>&lt;a name=&quot;efm-method&quot;&gt;&lt;/a&gt;</p>
+<h3>2.2 Orbit-aligned cost + equivariant field</h3>
+
+<p><strong>Key formula</strong></p>
+
+<p>\[</p>
+<p>\tilde c(x_0,x_1)=\min_{g\in G}\left\|x_0-\rho(g)x_1\right\|_2^2,\]</p>
+
+<p>where \(G= O(D)\times S(N)\) (rotations + permutations).  </p>
+
+<p><strong>Implementation</strong></p>
+
+<ol>
+<li>**Permutation alignment** — Hungarian algorithm  </li>
+<ol>
+<li>**Rotation alignment** — Kabsch algorithm  </li>
+<ol>
+<li>Hungarian again on \(\tilde c\) → OT plan on the *orbit* itself.</li>
+</ol>
+
+<p>The vector field is implemented as an <strong>SE(3) × S(N) equivariant GNN</strong>, guaranteeing that the push-forward density stays symmetry-invariant.</p>
+
+<p>&lt;a name=&quot;efm-results&quot;&gt;&lt;/a&gt;</p>
+<h3>2.3 What do we gain?</h3>
+
+<p>| Dataset | Path length ↓ | Inference speed ↑ | Other wins |</p>
+<p>|---------|---------------|-------------------|------------|</p>
+<p>| LJ-55 | ×2 shorter | 3× faster | same likelihood |</p>
+<p>| Alanine dipeptide | — | — | ΔF(φ) matches umbrella sampling |</p>
+
+<p>Straight paths are back!  </p>
+<p>EFM fixes symmetry with zero extra ODE cost.</p>
+
+<hr/>
+
+<p>&lt;a name=&quot;rfm&quot;&gt;&lt;/a&gt;</p>
+<h2>3 · Part II – Riemannian Flow Matching (RFM)</h2>
+
+<p>&lt;a name=&quot;rfm-motivation&quot;&gt;&lt;/a&gt;</p>
+<h3>3.1 What if the coordinates themselves are curved?</h3>
+
+<p>Spherical data, torus angles, mesh surfaces—flattening them breaks intrinsic distances.  </p>
+<p>We need “straight” <strong>within</strong> the manifold.</p>
+
+<p>&lt;a name=&quot;rfm-method&quot;&gt;&lt;/a&gt;</p>
+<h3>3.2 Premetric trick 🔧</h3>
+
+<p><strong>Theorem 3.1</strong></p>
+
+<p>Given any positive “distance-like” function \(d(x,y)\):</p>
+<p>\[u_t(x\mid x_1)=</p>
+<p>\dot\kappa(t)\;\frac{d(x,x_1)}{\left\|\nabla d\right\|_g^2}\;\nabla d(x,x_1)\]</p>
+<p>is the <em>minimal-norm</em> vector field that shrinks \(d(x_t,x_1)\) according to schedule \(\kappa(t)\).</p>
+
+<p>&lt;div style=&quot;margin-left:1.5em&quot;&gt;</p>
+
+<p><em>Simple manifold</em>   → choose <strong>geodesic distance</strong> → closed form  </p>
+<p>\(x_t = \exp_{x_1}\!\bigl((1-t)\,\log_{x_1}x_0\bigr)\) → <strong>0 ODE steps</strong></p>
+
+<p><em>General manifold</em> → choose <strong>spectral distance</strong>  </p>
+<p>\[d_w^2(x,y)=\sum_{i=1}^k w(\lambda_i)(\varphi_i(x)-\varphi_i(y))^2\]</p>
+<p>(one-time eigen solve) → 1 forward ODE, <strong>still divergence-free</strong></p>
+
+<p>&lt;/div&gt;</p>
+
+<p>&lt;a name=&quot;rfm-results&quot;&gt;&lt;/a&gt;</p>
+<h3>3.3 Highlights</h3>
+
+<p>| Manifold / Data | Metric used | NLL / Quality | Note |</p>
+<p>|-----------------|-------------|---------------|------|</p>
+<p>| S² volcano/flood/fire | geodesic | ↓ 0.9–2 nats vs diffusions | analytic sampling |</p>
+<p>| T² Ramachandran | geodesic | matches SOTA | multimodal |</p>
+<p>| 7-D torus RNA | geodesic | large gain | high-dim scalability |</p>
+<p>| Bunny mesh | biharmonic | smoother than geodesic | one eigen solve |</p>
+<p>| Maze (with walls) | biharmonic | flows respect boundary | Neumann BC |</p>
+
+<hr/>
+
+<p>&lt;a name=&quot;compare&quot;&gt;&lt;/a&gt;</p>
+<h2>4 · Common Threads &amp; Diverging Strengths</h2>
+
+<p>| Theme | EFM | RFM |</p>
+<p>|-------|-----|-----|</p>
+<p>| <strong>Goal</strong> | straighten OT paths in ℝⁿ | straighten paths <em>inside</em> manifold |</p>
+<p>| <strong>Geometry handle</strong> | orbit-aligned cost | premetric (geodesic / spectral) |</p>
+<p>| <strong>When to use</strong> | Euclidean data with large symmetry group | intrinsic manifolds (sphere, SPD, mesh) |</p>
+<p>| <strong>Training cost</strong> | Hungarian + Kabsch per batch | eigen-solve once (spectral) |</p>
+<p>| <strong>Inference</strong> | fixed RK4 (~8 steps) | 0 steps (simple) / few steps (general) |</p>
+
+<hr/>
+
+<p>&lt;a name=&quot;outlook&quot;&gt;&lt;/a&gt;</p>
+<h2>5 · Open Horizons</h2>
+
+<ul>
+<li>Mixing both ideas: equivariant flows **on** manifolds (e.g., permutable atoms on a sphere)  </li>
+<ul>
+<li>Adaptive or learned premetrics  </li>
+<ul>
+<li>Memory-light eigen decomposition for mega-scale meshes  </li>
+<ul>
+<li>Stochastic couplings &amp; Brownian bridges within RFM</li>
+</ul>
+
+<hr/>
+
+<h3>Take-home sound-bite</h3>
+
+<blockquote>**EFM** aligns coordinates so external symmetries can’t fool the flow.</blockquote>
+<blockquote>**RFM** reshapes the notion of “straight” so the flow can live happily on any geometry.</blockquote>
+<blockquote>Together they turn few-step CNFs from a Euclidean toy into a geometry-aware toolbox.</blockquote>
+</body></html>
