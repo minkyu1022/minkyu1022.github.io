@@ -38,7 +38,7 @@ th, td {
 
 # Geometry-Aware Generative Paths: From Group Orbits to Premetrics
 
-**Review of “Equivariant Flow Matching” (NeurIPS 2023) & “Flow Matching on General Geometries” (ICLR 2024)**
+**“Equivariant Flow Matching” (NeurIPS 2023) & “Flow Matching on General Geometries” (ICLR 2024)**
 
 > _One fixes crooked paths by aligning external symmetries; the other bends the space itself so every path becomes straight again._
 
@@ -46,7 +46,7 @@ th, td {
 
 ## Table of Contents
 
-1. [A 60-Second Refresher on Flow Matching](#fm-refresher)
+1. [Preliminary: Flow Matching](#fm-refresher)
 2. [Part I – Equivariant Flow Matching (EFM)](#efm)  
    2.1 [Why standard OT-FM fails on symmetric data](#efm-motivation)  
    2.2 [Orbit-aligned cost & equivariant GNN](#efm-method)  
