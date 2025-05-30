@@ -76,12 +76,12 @@ pushes a simple base density to a complex target.
 2. Minimize an MSE loss
 
 <div class="math-display">
-\[
+$$
 \mathcal{L} \;=\; \mathbb{E}\Bigl\|\,v_\theta(t,x_t)\;-\;u_t(x_t\mid x_1)\Bigr\|^2.
-\]
+$$
 </div>
 
-If \(u_t\) is _simple_ (e.g. OT displacement), we can integrate the learned field with **just a few fixed RK4 steps** at inference time.
+If \(u*t\) is \_simple* (e.g. OT displacement), we can integrate the learned field with **just a few fixed RK4 steps** at inference time.
 
 ---
 
@@ -125,10 +125,10 @@ A mini-batch of 512 samples covers only \(\sim10^5\) pairs—**far too few** to 
 **Key formula**
 
 <div class="math-display">
-\[
+$$
 \tilde c(x_0,x_1)
 = \min_{g\in G}\,\bigl\|x_0 - \rho(g)x_1\bigr\|_2^2,
-\]
+$$
 </div>
 
 where \(G = O(D)\times S(N)\) (rotations + permutations).
@@ -194,10 +194,10 @@ We need “straight” **within** the manifold.
 Given any positive “distance-like” function \(d(x,y)\):
 
 <div class="math-display">
-\[
+$$
 u_t(x\mid x_1)
 = \dot{\kappa}(t)\,\frac{d(x,x_1)}{\bigl\|\nabla d\bigr\|_g^2}\,\nabla d(x,x_1)
-\]
+$$
 </div>
 
 is the _minimal-norm_ vector field that shrinks \(d(x_t,x_1)\) according to schedule \(\kappa(t)\).
@@ -205,7 +205,7 @@ is the _minimal-norm_ vector field that shrinks \(d(x_t,x_1)\) according to sche
 > **Simple manifold** → choose **geodesic distance** → closed form
 >
 > <div class="math-display">
-> \[x_t = \exp_{x_1}\!\bigl((1-t)\,\log_{x_1}x_0\bigr)\]
+> $$x_t = \exp_{x_1}\!\bigl((1-t)\,\log_{x_1}x_0\bigr)$$
 > </div>
 >
 > → **0 ODE steps**
@@ -213,8 +213,8 @@ is the _minimal-norm_ vector field that shrinks \(d(x_t,x_1)\) according to sche
 > **General manifold** → choose **spectral distance**
 >
 > <div class="math-display">
-> \[d_w^2(x,y)
->   = \sum_{i=1}^k w(\lambda_i)\bigl(\varphi_i(x)-\varphi_i(y)\bigr)^2\]
+> $$d_w^2(x,y)
+>   = \sum_{i=1}^k w(\lambda_i)\bigl(\varphi_i(x)-\varphi_i(y)\bigr)^2$$
 > </div>
 >
 > (one-time eigen solve) → **still divergence-free**
