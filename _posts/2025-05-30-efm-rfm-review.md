@@ -74,7 +74,7 @@ $$
 
 where $$v_\theta$$ is a parameterized vector field (typically a neural network). By solving this ODE from $$t=0$$ to $$t=1$$, we transform samples from the base $$q(x_0)$$ to approximate samples from the target distribution $$\mu(x_1)$$.
 
-The training of Flow Matching simplifies to a regression problem. Given pairs $$(x_0, x_1)$$, we define a straightforward, "ideal" vector field $$u_t(x_t \mid x_1)$$, typically chosen as the direct path from $$x_0$ to $x_1$$. In Euclidean space, this vector field is often defined as:
+The training of Flow Matching simplifies to a regression problem. Given pairs $$(x_0, x_1)$$, we define a straightforward, "ideal" vector field $$u_t(x_t \mid x_1)$$, typically chosen as the direct path from $$x_0$$ to $$x_1$$. In Euclidean space, this vector field is often defined as:
 
 $$
 u_t(x_t \mid x_1) = \frac{x_1 - x_t}{1 - t},
