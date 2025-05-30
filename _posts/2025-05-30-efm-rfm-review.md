@@ -5,6 +5,46 @@ date: 2025-05-30
 math: true
 ---
 
+<!-- MathJax -->
+<script type="text/javascript" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+<!-- Styling for better spacing -->
+<style>
+h2, h3 {
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+}
+
+.math-display {
+  margin: 1em 0;
+  text-align: center;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+th, td {
+  border: 1px solid #999;
+  padding: 0.5em;
+  text-align: center;
+}
+</style>
+
+---
+
+layout: post
+title: "Geometry-Aware Generative Paths: From Group Orbits to Premetrics"
+date: 2025-05-30
+math: true
+
+---
+
 # Geometry-Aware Generative Paths: From Group Orbits to Premetrics
 
 **Review of “Equivariant Flow Matching” (NeurIPS 2023) & “Flow Matching on General Geometries” (ICLR 2024)**
