@@ -72,7 +72,7 @@ pushes a simple base density to a complex target.
 
 **Flow Matching (FM)** turns this into pure regression:
 
-1. Pick an “ideal” vector field \(u_t(x\mid x_1)\) that moves \(x\) along a straight line to \(x_1\).
+1. Pick an “ideal” vector field $$u_t(x\mid x_1)$$ that moves $$x$$ along a straight line to $$x_1$$.
 2. Minimize an MSE loss
 
 <div class="math-display">
@@ -81,7 +81,7 @@ $$
 $$
 </div>
 
-If \(u*t\) is \_simple* (e.g. OT displacement), we can integrate the learned field with **just a few fixed RK4 steps** at inference time.
+If $$u_t$$ is simple (e.g. OT displacement), we can integrate the learned field with **just a few fixed RK4 steps** at inference time.
 
 ---
 
@@ -94,8 +94,8 @@ If \(u*t\) is \_simple* (e.g. OT displacement), we can integrate the learned fie
 ### 2.1 Why OT-FM meets symmetry hell 😵
 
 Take a Lennard-Jones cluster of 55 atoms.  
-_One_ configuration has \(55!\times 8\pi^2\) symmetry copies (permutations × rotations).  
-A mini-batch of 512 samples covers only \(\sim10^5\) pairs—**far too few** to land on the “right” copy.
+_One_ configuration has $$55!\times 8\pi^2$$ symmetry copies (permutations × rotations).  
+A mini-batch of 512 samples covers only $$\sim10^5$$ pairs—**far too few** to land on the “right” copy.
 
 **Outcome with vanilla OT-FM:**
 
@@ -131,13 +131,13 @@ $$
 $$
 </div>
 
-where \(G = O(D)\times S(N)\) (rotations + permutations).
+where $$G = O(D)\times S(N)$$ (rotations + permutations).
 
 **Implementation steps:**
 
 1. **Permutation alignment** — Hungarian algorithm
 2. **Rotation alignment** — Kabsch algorithm
-3. Hungarian again on \(\tilde c\) → OT plan on the _orbit_ itself.
+3. Hungarian again on $$\tilde c$$ → OT plan on the _orbit_ itself.
 
 The learned vector field is an **SE(3) × S(N) equivariant GNN**, ensuring the push-forward density stays symmetry-invariant.
 
@@ -191,7 +191,7 @@ We need “straight” **within** the manifold.
 ### 3.2 Premetric trick 🔧
 
 **Theorem 3.1**  
-Given any positive “distance-like” function \(d(x,y)\):
+Given any positive “distance-like” function $$d(x,y)$$:
 
 <div class="math-display">
 $$
@@ -200,7 +200,7 @@ u_t(x\mid x_1)
 $$
 </div>
 
-is the _minimal-norm_ vector field that shrinks \(d(x_t,x_1)\) according to schedule \(\kappa(t)\).
+is the _minimal-norm_ vector field that shrinks $$d(x_t,x_1)$$ according to schedule $$\kappa(t)$$.
 
 > **Simple manifold** → choose **geodesic distance** → closed form
 >
