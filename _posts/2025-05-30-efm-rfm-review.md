@@ -60,7 +60,7 @@ math: true
 
 ## 1 · Preliminary: What is Flow Matching
 
-Continuous Normalizing Flows (CNFs) learn a **vector field** $v_\theta(t,x)$ so that integrating the ODE
+Continuous Normalizing Flows (CNFs) learn a **vector field** $$v_\theta(t,x)$$ so that integrating the ODE
 
 <div class="math-display">
 $$
