@@ -46,7 +46,7 @@ th, td {
 
 ## Table of Contents
 
-1. [Preliminary: Flow Matching](#fm-refresher)
+1. [Preliminary: What is Flow Matching](#fm-refresher)
 2. [Part I – Equivariant Flow Matching (EFM)](#efm)  
    2.1 [Why standard OT-FM fails on symmetric data](#efm-motivation)  
    2.2 [Orbit-aligned cost & equivariant GNN](#efm-method)  
@@ -62,7 +62,7 @@ th, td {
 
 <a name="fm-refresher"></a>
 
-## 1 · A 60-Second Refresher on Flow Matching
+## 1 · Preliminary: What is Flow Matching
 
 Continuous Normalizing Flows (CNFs) learn a **vector field** \\(v*\\theta(t,x)\\) so that integrating the ODE  
 \\[
