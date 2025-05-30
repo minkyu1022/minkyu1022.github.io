@@ -42,7 +42,9 @@ math: true
 
 ## Table of Contents
 
-1. [Preliminary: What is Flow Matching](#fm-refresher)
+1. [Preliminaries](#prel)
+   - [1.1 Flow Matching](#fm)
+   - [1.2 Optimal Transport (OT)](#ot)
 2. [Part I – Equivariant Flow Matching (EFM)](#efm)
    - [2.1 Why standard OT-FM fails on symmetric data](#efm-motivation)
    - [2.2 Orbit-aligned cost & equivariant GNN](#efm-method)
@@ -56,9 +58,17 @@ math: true
 
 ---
 
-<a name="fm-refresher"></a>
+<a name="prel"></a>
 
-## 1 · Preliminary: What is Flow Matching
+## 1 · Preliminaries
+
+<a name="fm"></a>
+
+### 1.1 Flow Matching
+
+<a name="ot"></a>
+
+### 1.2 Optimal Transport (OT)
 
 Continuous Normalizing Flows (CNFs) learn a **vector field** $$v_\theta(t,x)$$ so that integrating the ODE
 
