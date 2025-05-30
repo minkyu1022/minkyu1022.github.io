@@ -1,0 +1,6 @@
+title: "minkyu1022's Blog"
+markdown: kramdown
+kramdown:
+  math_engine: mathjax
+  input: GFM
+theme: minima
