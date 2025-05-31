@@ -213,7 +213,7 @@ where the inner product is with respect to the Riemannian metric $$ g $$, and $$
 Among all vector fields satisfying this constraint, we want the one with minimal energy (i.e., minimal norm):
 
 $$
-\min\_{u \in T_x \mathcal{M}} \frac{1}{2}\|u\|\_g^2
+\min_{u \in T_x \mathcal{M}} \frac{1}{2}\|u\|_g^2
 \quad \text{s.t.} \quad
 \langle \nabla_x d, u \rangle_g = \dot{\kappa}(t) d(x_t, x_1).
 $$
@@ -221,7 +221,7 @@ $$
 Solving this Lagrangian optimization problem gives the unique minimum-norm solution that is **parallel to the gradient**:
 
 $$
-u_t(x \mid x_1) = \frac{d \log \kappa(t)}{dt} \cdot d(x,x_1) \cdot \frac{\nabla d(x,x_1)}{\|\nabla d(x,x_1)\|\_g^2}.
+u_t(x \mid x_1) = \frac{d \log \kappa(t)}{dt} d(x,x_1) \frac{\nabla d(x,x_1)}{\|\nabla d(x,x_1)\|_g^2}.
 $$
 
 This formulation aligns with the **Cauchy–Schwarz** optimality condition, confirming both minimality and uniqueness.
@@ -229,7 +229,7 @@ This formulation aligns with the **Cauchy–Schwarz** optimality condition, conf
 The resulting objective remains:
 
 $$
-\mathcal{L}_{\text{RFM}}(\theta) = \mathbb{E}_{t, p_t(x)} \|v_t(x) - u_t(x)\|\_g^2,
+\mathcal{L}_{\text{RFM}}(\theta) = \mathbb{E}_{t, p_t(x)} \|v_t(x) - u_t(x)\|_g^2,
 $$
 
 but $$ u_t(x) $$ is now constructed analytically to respect the geometry of the manifold.
@@ -241,7 +241,7 @@ When $$\exp$$ and $$\log$$ maps are closed-form (e.g., $$\mathbb{S}^2$$, $$\math
 In general manifolds, geodesics are costly to compute, so RFM proposes **spectral distances** (e.g., diffusion and biharmonic distances) as approximations. These are derived from Laplace-Beltrami eigenfunctions:
 
 $$
-d*w(x, y)^2 = \sum*{i=1}^\infty w(\lambda_i)(\varphi_i(x) - \varphi_i(y))^2.
+d_w(x, y)^2 = \sum_{i=1}^{\infty} w(\lambda_i)(\varphi_i(x) - \varphi_i(y))^2.
 $$
 
 In practice:
