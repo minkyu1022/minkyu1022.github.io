@@ -128,7 +128,10 @@ Using a naive OT flow matching loss on symmetric datasets often results in **hig
 - Loss of straightness and interpretability
 - Inefficient inference (more ODE steps required)
 
-![OT flow matching](/assets/images/efm/OT.png)
+<!-- ![OT flow matching](/assets/images/efm/OT.png) -->
+<p align="center">
+  <img src="/assets/images/OT.png" alt="OT flow matching" width="500">
+</p>
 
 ### 2.2 EFM: Orbit-aware Cost and Equivariant Model
 
@@ -157,7 +160,7 @@ EFM shows superior performance in tasks involving highly symmetric distributions
 - **Lennard-Jones clusters** (LJ-13, LJ-55): produces straighter paths, faster inference
 - **Alanine dipeptide**: matches free energy profiles with fewer ODE steps
 
-![Experiment results](/assets/images/efm/AD2.pdf)
+![Experiment results](/assets/images/efm/results.png)
 
 These results demonstrate that symmetry-aware OT cost functions and equivariant architectures allow FM to fully exploit geometric structures in the data.
 
