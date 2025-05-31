@@ -46,7 +46,7 @@ math: true
    - [1.1 Flow Matching](#fm)
    - [1.2 Optimal Transport (OT)](#ot)
 2. [Paper I: Equivariant Flow Matching (EFM)](#efm)
-   - [2.1 Limitation of Naive OT Flow Matching](#efm-navie_ot)
+   - [2.1 Limitation of Naive OT Flow Matching](#efm-naive_ot)
    - [2.2 EFM: Orbit-aware Cost and Equivariant Model](#efm-methods)
    - [2.3 Experimental Results](#efm-results)
 3. [Paper II: Riemannian Flow Matching (RFM)](#rfm)
@@ -184,7 +184,7 @@ $$
 \mathcal{L}_\text{RFM}(\theta) = \mathbb{E}_{t, p_t(x)} \|v_t(x) - u_t(x)\|_g^2.
 $$
 
-Probability paths $$p_t \in \mathcal{P}$$ interpolate between boundary conditions $$p_0 = p$$, $$p_1 = q$$. Conditional paths $$p_t(x | x_1)$$ and conditional vector fields $$u_t(x | x_1)$$ are defined, then marginalized as:
+Probability paths $$p_t \in \mathcal{P}$$ interpolate between boundary conditions $$p_0 = p$$, $$p_1 = q$$. Conditional paths $$p_t(x \mid x_1)$$ and conditional vector fields $$u_t(x \mid x_1)$$ are defined, then marginalized as:
 
 $$
 p_t(x) = \int_\mathcal{M} p_t(x \mid x_1) q(x_1) \, d\text{vol}_{x_1}, \quad
@@ -192,6 +192,13 @@ u_t(x) = \int_\mathcal{M} u_t(x \mid x_1) \frac{p_t(x \mid x_1) q(x_1)}{p_t(x)} 
 $$
 
 ![Riemannian FM](/assets/images/rfm/cond_ut.png)
+
+And, as we know from the background of flow matching, the Riemannian FM objective is equivalent to the
+following Riemannian CFM objective:
+
+$$
+\mathcal{L}_\text{RCFM}(\theta) = \mathbb{E}_{t, q(x_1), p_t(x \mid x_1)} \|v_t(x) - u_t(x \mid x_1)\|_g^2.
+$$
 
 <a name="rfm-vf"></a>
 
