@@ -82,7 +82,7 @@ $$
 
 which represents the constant velocity required to arrive at $$x_1$$ by time $$t = 1$$.
 
-Training then proceeds by minimizing the mean squared error (MSE) loss between the learned vector field $$v_\theta$$ and the ideal vector field $$u_t$$:
+Training then proceeds by minimizing the mean squared error (MSE) loss between the learned vector field $$v_\theta$$ and the ideal vector field $$u_t$$ via conditional flow matching (CFM):
 
 $$
 \mathcal{L}(\theta) = \mathbb{E}_{t \sim U[0,1], x_0 \sim q, x_1 \sim \mu}\left[\| v_\theta(t,x_t) - u_t(x_t \mid x_1) \|^2\right].
@@ -116,14 +116,61 @@ However, in the presence of symmetries or non-Euclidean geometries, naive OT cou
 
 <a name="efm"></a>
 
-## 2 · Part I – Equivariant Flow Matching (EFM)
+## 2. Paper 1: Equivariant Flow Matching (EFM)
+
+This paper focuses on improving OT-based flow matching in **Euclidean space with symmetric structures**, such as **translations**, **rotations**, and **permutations**. These symmetries commonly arise in molecular and physical systems, where multiple configurations belong to the same equivalence class (orbit).
+
+### 2.1 Limitation of Naive OT Flow Matching
+
+Using a naive OT flow matching loss on symmetric datasets often results in **highly curved paths**. This occurs because the OT solver may match source and target points that belong to **different symmetry orbits**. As a result, the learned vector field needs to "undo" this mismatch, leading to:
+
+- Bent transport trajectories
+- Loss of straightness and interpretability
+- Inefficient inference (more ODE steps required)
+
+![OT flow matching](/assets/images/efm/OT.png)
+
+### 2.2 EFM: Orbit-aware Cost and Equivariant Model
+
+To address this, the paper modifies the OT cost function so that point pairs are matched **within the same symmetry orbit**. The new cost is:
+
+$$
+\tilde{c}(x_0, x_1) = \min_{g \in G} \|x_0 - \rho(g)x_1\|^2,
+$$
+
+where $G$ is the symmetry group and $\rho(g)$ is the group action.
+
+To solve this practically:
+
+- **Translation** symmetry is handled by using **mean-free coordinates**
+- **Permutation** symmetry is handled by the **Hungarian algorithm** to optimally match particle indices
+- **Rotation** symmetry is handled using the **Kabsch algorithm**, which finds the optimal orthogonal alignment between two point clouds
+
+The model uses an **equivariant GNN** architecture designed to respect these group symmetries. The result is a vector field that remains equivariant and produces consistent flow directions under symmetric transformations.
+
+![Equivariant OT flow matching](/assets/images/efm/eq_OT.png)
+
+### 2.3 Experimental Results
+
+EFM shows superior performance in tasks involving highly symmetric distributions:
+
+- **Lennard-Jones clusters** (LJ-13, LJ-55): produces straighter paths, faster inference
+- **Alanine dipeptide**: matches free energy profiles with fewer ODE steps
+
+![Experiment results](/assets/images/efm/AD2.pdf)
+
+These results demonstrate that symmetry-aware OT cost functions and equivariant architectures allow FM to fully exploit geometric structures in the data.
+
+---
+
+<!-- ## 2 · Part I – Equivariant Flow Matching (EFM)
 
 <a name="efm-motivation"></a>
 
 ### 2.1 Why OT-FM meets symmetry hell 😵
 
-Take a Lennard-Jones cluster of 55 atoms.  
-_One_ configuration has $$55!\times 8\pi^2$$ symmetry copies (permutations × rotations).  
+Take a Lennard-Jones cluster of 55 atoms.
+_One_ configuration has $$55!\times 8\pi^2$$ symmetry copies (permutations × rotations).
 A mini-batch of 512 samples covers only $$\sim10^5$$ pairs—**far too few** to land on the “right” copy.
 
 **Outcome with vanilla OT-FM:**
@@ -199,10 +246,10 @@ The learned vector field is an **SE(3) × S(N) equivariant GNN**, ensuring the p
   </tbody>
 </table>
 
-Straight paths are back!  
+Straight paths are back!
 EFM fixes symmetry with zero extra ODE cost.
 
----
+--- -->
 
 <a name="rfm"></a>
 
