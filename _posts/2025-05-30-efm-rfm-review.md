@@ -242,13 +242,7 @@ $$
 
 This formulation aligns with the **Cauchy–Schwarz** optimality condition, confirming both minimality and uniqueness.
 
-The resulting objective remains:
-
-$$
-\mathcal{L}_{\text{RFM}}(\theta) = \mathbb{E}_{t, p_t(x)} \|v_t(x) - u_t(x)\|_g^2,
-$$
-
-but $$ u_t(x) $$ is now constructed analytically to respect the geometry of the manifold.
+One of the good choices for the distance function is using **geodesic**.
 
 <a name="rfm-spectral"></a>
 
@@ -329,19 +323,19 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
   </tbody>
 </table> -->
 
-| **Aspect**                     | **Naive Flow Matching<br>(prior works)**                         | **Equivariant Flow Matching<br>(EFM)**                                           | **Riemannian Flow Matching<br>(RFM)**                                                                                                 |
-| ------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ambient space**              | Flat **Euclidean ℝⁿ**                                            | Euclidean ℝⁿ with **group symmetries** (translations ∪ rotations ∪ permutations) | **General Riemannian manifold** 𝓜 (curved, possibly with boundary)                                                                    |
-| **Ideal vector field \(u_t\)** | Linear / OT displacement <br> \(u_t = \dfrac{x_1 - x_t}{1 - t}\) | _Same formula_, but **x₀–x₁ pairs are first aligned inside each symmetry orbit** | Analytic minimal-norm field <br> \(u_t = \dot{\log\kappa}(t)\,d\,\dfrac{\nabla d}{\|\nabla d\|\_g^{2}}\) (geodesic or spectral \(d\)) |
-| **OT cost for pairing**        | Plain \(c(x_0,x_1)=\|x_0 - x_1\|^2\)                             | Orbit-aware \( \tilde c(x*0,x_1)=\min*{g\in G}\|x_0 - \rho(g)x_1\|^2 \)          | _No batch OT_ → independent draws; coupling not required                                                                              |
-| **Symmetry handling**          | ❌ None → curved paths                                           | ✓ Translation (mean-free), permutation (Hungarian), rotation (Kabsch)            | Handled intrinsically by geometry; external symmetry not the focus                                                                    |
-| **Distance / pre-metric**      | Euclidean L₂ only                                                | Euclidean L₂ — **after alignment**                                               | Flexible: geodesic, diffusion, biharmonic, …                                                                                          |
-| **Model architecture**         | Standard MLP / GNN                                               | **SE(3) × S(N) equivariant GNN**                                                 | Any manifold-aware NN; metric only in loss                                                                                            |
-| **Extra training cost**        | None                                                             | Hungarian + Kabsch **per mini-batch**                                            | One-time Laplacian eigen-solve (if spectral)                                                                                          |
-| **Inference ODE steps**        | Few-step RK4, may blow up if paths bent                          | 4–8 fixed steps (straighter)                                                     | 0 steps (closed-form manifolds) or ≈1–3 steps (spectral)                                                                              |
-| **Typical datasets**           | Toy 2-D Gaussians, simple point clouds                           | LJ-13/LJ-55 clusters, alanine dipeptide                                          | S² weather, T² Ramachandran, 7-D torus RNA, bunny mesh, maze                                                                          |
-| **Primary win**                | Simpler than likelihood CNFs                                     | **Straightens OT paths under symmetry → faster inference**                       | **Extends FM to curved spaces → intrinsic modeling, analytic sampling**                                                               |
-| **Main limitation**            | Breaks under symmetry; Euclidean only                            | Still Euclidean; extra batch OT cost                                             | Needs manifold tools (exp/log or Laplacian eigen-solve)                                                                               |
+| **Aspect**                     | **Naive Flow Matching<br>(prior works)**                         | **Equivariant Flow Matching<br>(EFM)**                                                                        | **Riemannian Flow Matching<br>(RFM)**                                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ambient space**              | Flat **Euclidean $$\mathbb{R}^n$$**                              | Euclidean $$\mathcal{R}^n$$ with **group symmetries** (translations $$\cup$$ rotations $$\cup$$ permutations) | **General Riemannian manifold** 𝓜 (curved, possibly with boundary)                                                                    |
+| **Ideal vector field $$u_t$$** | Linear / OT displacement <br> $$u_t = \dfrac{x_1 - x_t}{1 - t}$$ | _Same formula_, but **x₀–x₁ pairs are first aligned inside each symmetry orbit**                              | Analytic minimal-norm field <br> $$u_t = \dot{\log\kappa}(t)\,d\,\dfrac{\nabla d}{\|\nabla d\|\_g^{2}}$$ (geodesic or spectral $$d$$) |
+| **OT cost for pairing**        | Plain $$c(x_0,x_1)=\|x_0 - x_1\|^2$$                             | Orbit-aware $$ \tilde c(x*0,x_1)=\min*{g\in G}\|x_0 - \rho(g)x_1\|^2 $$                                       | _No batch OT_ → independent draws; coupling not required                                                                              |
+| **Symmetry handling**          | ❌ None → curved paths                                           | ✓ Translation (mean-free), permutation (Hungarian), rotation (Kabsch)                                         | Handled intrinsically by geometry; external symmetry not the focus                                                                    |
+| **Distance / pre-metric**      | Euclidean $$L_2$$ only                                           | Euclidean $$L_2$$ — **after alignment**                                                                       | Flexible: geodesic, diffusion, biharmonic, …                                                                                          |
+| **Model architecture**         | Standard MLP / GNN                                               | **SE(3) × S(N) equivariant GNN**                                                                              | Any manifold-aware NN; metric only in loss                                                                                            |
+| **Extra training cost**        | None                                                             | Hungarian + Kabsch **per mini-batch**                                                                         | One-time Laplacian eigen-solve (if spectral)                                                                                          |
+| **Inference ODE steps**        | Few-step RK4, may blow up if paths bent                          | 4–8 fixed steps (straighter)                                                                                  | 0 steps (closed-form manifolds) or ≈1–3 steps (spectral)                                                                              |
+| **Typical datasets**           | Toy 2-D Gaussians, simple point clouds                           | LJ-13/LJ-55 clusters, alanine dipeptide                                                                       | $$S^2$$ weather, $$T^2$$ Ramachandran, 7-D torus RNA, bunny mesh, maze                                                                |
+| **Primary win**                | Simpler than likelihood CNFs                                     | **Straightens OT paths under symmetry → faster inference**                                                    | **Extends FM to curved spaces → intrinsic modeling, analytic sampling**                                                               |
+| **Main limitation**            | Breaks under symmetry; Euclidean only                            | Still Euclidean; extra batch OT cost                                                                          | Needs manifold tools (exp/log or Laplacian eigen-solve)                                                                               |
 
 ---
 
