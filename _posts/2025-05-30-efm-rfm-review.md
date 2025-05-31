@@ -163,191 +163,120 @@ These results demonstrate that symmetry-aware OT cost functions and equivariant 
 
 ---
 
-<!-- ## 2 · Part I – Equivariant Flow Matching (EFM)
-
-<a name="efm-motivation"></a>
-
-### 2.1 Why OT-FM meets symmetry hell 😵
-
-Take a Lennard-Jones cluster of 55 atoms.
-_One_ configuration has $$55!\times 8\pi^2$$ symmetry copies (permutations × rotations).
-A mini-batch of 512 samples covers only $$\sim10^5$$ pairs—**far too few** to land on the “right” copy.
-
-**Outcome with vanilla OT-FM:**
-
-<table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>consequence</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>OT assignment matches <em>different</em> symmetry orbits</td>
-      <td>vector field must “bend” to undo mismatch</td>
-    </tr>
-    <tr>
-      <td>crooked paths</td>
-      <td>need smaller ODE step → slow inference</td>
-    </tr>
-  </tbody>
-</table>
-
-<a name="efm-method"></a>
-
-### 2.2 Orbit-aligned cost + equivariant field
-
-**Key formula**
-
-<div class="math-display">
-$$
-\tilde c(x_0,x_1)
-= \min_{g\in G}\,\bigl\|x_0 - \rho(g)x_1\bigr\|_2^2,
-$$
-</div>
-
-where $$G = O(D)\times S(N)$$ (rotations + permutations).
-
-**Implementation steps:**
-
-1. **Permutation alignment** — Hungarian algorithm
-2. **Rotation alignment** — Kabsch algorithm
-3. Hungarian again on $$\tilde c$$ → OT plan on the _orbit_ itself.
-
-The learned vector field is an **SE(3) × S(N) equivariant GNN**, ensuring the push-forward density stays symmetry-invariant.
-
-<a name="efm-results"></a>
-
-### 2.3 What do we gain?
-
-<table>
-  <thead>
-    <tr>
-      <th>Dataset</th>
-      <th>Path length ↓</th>
-      <th>Inference speed ↑</th>
-      <th>Other wins</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>LJ-55</td>
-      <td>×2 shorter</td>
-      <td>3× faster</td>
-      <td>same likelihood</td>
-    </tr>
-    <tr>
-      <td>Alanine dipeptide</td>
-      <td>—</td>
-      <td>—</td>
-      <td>ΔF(φ) matches umbrella sampling</td>
-    </tr>
-  </tbody>
-</table>
-
-Straight paths are back!
-EFM fixes symmetry with zero extra ODE cost.
-
---- -->
-
 <a name="rfm"></a>
 
-## 3. Paper 2: Riemannian Flow Matching (RFM)
+## 3 · Paper II – Riemannian Flow Matching (RFM)
 
-This paper generalizes flow matching to **non-Euclidean Riemannian manifolds**, allowing vector fields and probability paths to evolve over curved geometric spaces.
+<a name="rfm-motivation"></a>
 
-### 3.1 Definitions on Riemannian Manifolds
+### 3.1 When Euclidean coordinates are curved
 
-RFM formulates flow matching over a manifold $\mathcal{M}$ equipped with Riemannian metric $g$. The loss compares tangent vector fields $v_t(x), u_t(x) \in T_x \mathcal{M}$ using the local metric:
+Spherical data, torus angles, mesh surfaces—flattening them breaks intrinsic distances.  
+We need “straight” **within** the manifold.
 
-$$
-\mathcal{L}_\text{RFM}(\theta) = \mathbb{E}_{t, p_t(x)} \|v_t(x) - u_t(x)\|_g^2.
-$$
+<a name="rfm-method"></a>
 
-Probability paths $p_t \in \mathcal{P}$ interpolate between boundary conditions $p_0 = p$, $p_1 = q$. Conditional paths $p_t(x | x_1)$ and conditional vector fields $u_t(x | x_1)$ are defined, then marginalized as:
+### 3.2 Premetric trick 🔧
 
-$$
-p_t(x) = \int_\mathcal{M} p_t(x \mid x_1) q(x_1) \, d\text{vol}_{x_1}, \quad
-u_t(x) = \int_\mathcal{M} u_t(x \mid x_1) \frac{p_t(x \mid x_1) q(x_1)}{p_t(x)} \, d\text{vol}_{x_1}.
-$$
-
-![Riemannian FM](/assets/images/rfm/cond_ut.png)
-
-### 3.2 Vector Fields via Distance Functions
-
-To construct Riemannian vector fields $$ u_t(x \mid x_1) $$, RFM introduces the concept of a distance-like function $$ d(x, x_1) $$ that satisfies the following properties:
-
-1. **Non-negativity**: $$ d(x, y) \geq 0 $$ for all $$ x, y \in \mathcal{M} $$
-2. **Positive definiteness**: $$ d(x, y) = 0 \iff x = y $$
-3. **Non-degeneracy**: $$ \nabla d(x, y) \neq 0 \iff x \neq y $$
-
-The central idea is to impose a **shrinking-speed condition** on the flow $$ x_t $$ toward the target point $$ x_1 $$, expressed as:
+**Theorem 3.1**  
+Given any positive “distance-like” function $d(x,y)$, we define a conditional vector field $u_t(x \mid x_1)$ that satisfies a shrinking‐speed constraint on geodesic distance. Namely, if $x_t$ evolves so that
 
 $$
-d(x_t, x_1) = \kappa(t) d(x_0, x_1), \quad \kappa(0) = 1, \; \kappa(1) = 0,
+d(x_t,x_1) \;=\; \kappa(t)\,d(x_0,x_1),
+\quad \kappa(0)=1,\;\kappa(1)=0,
 $$
 
-which enforces that the distance to the target shrinks according to schedule $$ \kappa(t) $$. Differentiating both sides with respect to time gives:
+then differentiating gives
 
 $$
-\frac{d}{dt} d(x_t, x_1) = \dot{\kappa}(t) d(x_0, x_1)
-\quad \Rightarrow \quad
-\langle \nabla_x d, u_t \rangle_g = \dot{\kappa}(t) d(x_t, x_1),
+\frac{d}{dt}\,d(x_t,x_1) \;=\; \dot\kappa(t)\,d(x_0,x_1)
+\;\;\Longrightarrow\;\;
+\bigl\langle \nabla_x d(x_t,x_1),\,u_t(x \mid x_1)\bigr\rangle_g
+\;=\; \dot\kappa(t)\,d(x_t,x_1).
 $$
 
-where the inner product is with respect to the Riemannian metric $$ g $$, and $$ \nabla_x d $$ denotes the gradient of the distance function at $$ x_t $$.
-
-Among all vector fields satisfying this constraint, we want the one with minimal energy (i.e., minimal norm):
+Among all tangent vectors $u \in T_x\mathcal{M}$ satisfying that inner‐product constraint, we choose the one with **minimal Riemannian norm** (i.e., minimal kinetic energy). Formally:
 
 $$
-\min\_{u \in T_x \mathcal{M}} \frac{1}{2}\|u\|\_g^2
-\quad \text{s.t.} \quad
-\langle \nabla_x d, u \rangle_g = \dot{\kappa}(t) d(x_t, x_1).
+\min_{\,u \in T_x\mathcal{M}\,}\;\frac12\,\|u\|_g^2
+\quad\text{s.t.}\quad
+\bigl\langle \nabla_x d(x,x_1),\,u \bigr\rangle_g
+\;=\; \dot\kappa(t)\,d(x,x_1).
 $$
 
-Solving this Lagrangian optimization problem gives the unique minimum-norm solution that is **parallel to the gradient**:
+Solving this Lagrangian‐dual condition via Cauchy–Schwarz yields the unique minimum‐norm field \!that is parallel to the gradient of $d$:
 
 $$
-
-u_t(x \mid x_1) = \frac{d \log \kappa(t)}{dt} \cdot d(x,x_1) \cdot \frac{\nabla d(x,x_1)}{\|\nabla d(x,x_1)\|\_g^2}.
+u_t(x \mid x_1)
+\;=\;
+\frac{d\,\log\kappa(t)}{dt}
+\;\;d(x,x_1)\;\;
+\frac{\nabla_x d(x,x_1)}{\|\nabla_x d(x,x_1)\|_g^2}.
 $$
 
-This formulation aligns with the **Cauchy–Schwarz** optimality condition, confirming both minimality and uniqueness.
+This exactly enforces that $d(x_t,x_1)$ shrinks at rate $\dot\kappa(t)$ while remaining the **lowest‐energy** vector field on the manifold.
 
-The resulting objective remains:
-
-$$
-\mathcal{L}_{\text{RFM}}(\theta) = \mathbb{E}_{t, p_t(x)} \|v_t(x) - u_t(x)\|\_g^2,
-$$
-
-but $$ u_t(x) $$ is now constructed analytically to respect the geometry of the manifold.
+<a name="rfm-results"></a>
 
 ### 3.3 Approximating Geodesics with Spectral Distances
 
-When $\exp$ and $\log$ maps are closed-form (e.g., $\mathbb{S}^2$, $\mathbb{T}^d$, Lie groups), one can directly compute $x_t$ without ODE simulation.
-
-In general manifolds, geodesics are costly to compute, so RFM proposes **spectral distances** (e.g., diffusion and biharmonic distances) as approximations. These are derived from Laplace-Beltrami eigenfunctions:
+When $\exp$/$\log$ maps are available in closed form (e.g.\ on $\mathbb{S}^2$, tori, or certain Lie groups), one can compute
 
 $$
-d*w(x, y)^2 = \sum*{i=1}^\infty w(\lambda_i)(\varphi_i(x) - \varphi_i(y))^2.
+x_t \;=\; \exp_{x_1}\bigl((1-t)\,\log_{x_1} x_0\bigr)
 $$
 
-In practice:
+directly without any ODE integration.
 
-- Use top-$k$ eigenfunctions for fast approximation (one-time cost)
-- Diffusion distance requires hyperparameter $\tau$, while biharmonic has no tunable hyperparameter
-- Spectral distances yield smooth, robust flows and enable one-step ODE integration during inference
+In general manifolds, exact geodesics are expensive, so RFM instead uses \textbf{spectral distances} (e.g.\ diffusion or biharmonic distances). These can be written in terms of the Laplace–Beltrami eigenfunctions $\{\varphi_i\}$ and eigenvalues $\{\lambda_i\}$:
 
-### 3.4 Experimental Results
+$$
+d_w^2(x,y)
+\;=\;
+\sum_{i=1}^{\infty} w(\lambda_i)\,
+\bigl(\varphi_i(x) - \varphi_i(y)\bigr)^2.
+$$
 
-RFM is evaluated on tasks over hyperspheres, hyperbolic spaces, tori, and manifolds with boundaries. Results show:
+In practice, we truncate to the top $k$ eigenpairs for a one‐time cost. Typical choices:
 
-- Accurate density matching on complex geometries
-- Low NLL and smooth vector fields
-- Effective performance without reliance on exact geodesics
+- **Diffusion distance**: choose $w(\lambda_i) = e^{-2\lambda_i \tau}$ for some $\tau>0$
+- **Biharmonic distance**: choose $w(\lambda_i) = \lambda_i^{-2}$, no tunable hyperparameter
 
-![Results for eigenfunction](/assets/images/rfm/eig_results.png)
+These spectral approximations yield smooth vector fields that are still divergence‐free and allow “one‐step” ODE integration at inference:
+
+<div class="math-display">
+$$
+\mathcal{L}_\text{RFM}(\theta)
+\;=\;
+\mathbb{E}_{t,p_t(x)}\Bigl\|
+v_\theta(t,x)
+\;-\;u_t(x)
+\Bigr\|_g^2,
+\;\;
+u_t(x)
+\;\text{constructed via }d_w(\cdot,\cdot).
+$$
+</div>
+
+### 3.4 Experimental Highlights
+
+RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key findings:
+
+- **S² scenarios** (volcano/flood/fire) using geodesic distance:
+  - Accurate sampling with no ODE steps
+  - NLL improvements of 0.9–2 nats vs diffusion baselines
+- **T² Ramachandran** (protein angles):
+  - Matches SOTA on multimodal densities
+- **7D torus RNA**:
+  - Handles high‐dimensional angles, large gain in performance
+- **Bunny mesh**:
+  - Biharmonic spectral distance yields smoother flows than geodesic
+- **Maze with walls**:
+  - Biharmonic distance respects Neumann boundary conditions
+
+<p align="center">
+  <img src="/assets/images/rfm/eig_results.png" alt="Eigenfunction results" width="700">
+</p>
 
 ---
 
