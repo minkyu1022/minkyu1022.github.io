@@ -45,15 +45,16 @@ math: true
 1. [Preliminaries](#prel)
    - [1.1 Flow Matching](#fm)
    - [1.2 Optimal Transport (OT)](#ot)
-2. [Part I – Equivariant Flow Matching (EFM)](#efm)
-   - [2.1 Why standard OT-FM fails on symmetric data](#efm-motivation)
-   - [2.2 Orbit-aligned cost & equivariant GNN](#efm-method)
-   - [2.3 Empirical wins — Lennard-Jones 55 & alanine dipeptide](#efm-results)
-3. [Part II – Riemannian Flow Matching (RFM)](#rfm)
-   - [3.1 When Euclidean coordinates are curved](#rfm-motivation)
-   - [3.2 Premetric trick: geodesic vs spectral distances](#rfm-method)
-   - [3.3 Experiments — sphere, torus, bunny mesh, maze](#rfm-results)
-4. [Common Threads & Diverging Strengths](#compare)
+2. [Paper I: Equivariant Flow Matching (EFM)](#efm)
+   - [2.1 Limitation of Naive OT Flow Matching](#efm-navie_ot)
+   - [2.2 EFM: Orbit-aware Cost and Equivariant Model](#efm-methods)
+   - [2.3 Experimental Results](#efm-results)
+3. [Paper II: Riemannian Flow Matching (RFM)](#rfm)
+   - [3.1 Definitions on Riemannian Manifolds](#rfm-def)
+   - [3.2 Vector Fields via Distance Functions](#rfm-vf)
+   - [3.3 Approximating Geodesics with Spectral Distances](#rfm-spectral)
+   - [3.4 Experimental Results](#rfm-results)
+4. [Summary](#summary)
 5. [Open Horizons](#outlook)
 
 ---
@@ -90,8 +91,6 @@ $$
 
 The simplicity and computational efficiency of Flow Matching make it a popular choice, especially when integration at inference time can be performed with very few numerical steps.
 
----
-
 <a name="ot"></a>
 
 ### 1.2 Optimal Transport (OT)
@@ -116,9 +115,11 @@ However, in the presence of symmetries or non-Euclidean geometries, naive OT cou
 
 <a name="efm"></a>
 
-## 2. Paper 1: Equivariant Flow Matching (EFM)
+## 2. Paper I: Equivariant Flow Matching (EFM)
 
 This paper focuses on improving OT-based flow matching in **Euclidean space with symmetric structures**, such as **translations**, **rotations**, and **permutations**. These symmetries commonly arise in molecular and physical systems, where multiple configurations belong to the same equivalence class (orbit).
+
+<a name="efm-naive_ot"></a>
 
 ### 2.1 Limitation of Naive OT Flow Matching
 
@@ -129,6 +130,8 @@ Using a naive OT flow matching loss on symmetric datasets often results in **hig
 - Inefficient inference (more ODE steps required)
 
 ![OT flow matching](/assets/images/efm/OT.png)
+
+<a name="efm-methods"></a>
 
 ### 2.2 EFM: Orbit-aware Cost and Equivariant Model
 
@@ -150,6 +153,8 @@ The model uses an **equivariant GNN** architecture designed to respect these gro
 
 ![Equivariant OT flow matching](/assets/images/efm/eq_OT.png)
 
+<a name="efm-results"></a>
+
 ### 2.3 Experimental Results
 
 EFM shows superior performance in tasks involving highly symmetric distributions:
@@ -165,9 +170,11 @@ These results demonstrate that symmetry-aware OT cost functions and equivariant 
 
 <a name="rfm"></a>
 
-## 3. Paper 2: Riemannian Flow Matching (RFM)
+## 3. Paper II: Riemannian Flow Matching (RFM)
 
 This paper generalizes flow matching to **non-Euclidean Riemannian manifolds**, allowing vector fields and probability paths to evolve over curved geometric spaces.
+
+<a name="rfm-def"></a>
 
 ### 3.1 Definitions on Riemannian Manifolds
 
@@ -185,6 +192,8 @@ u_t(x) = \int_\mathcal{M} u_t(x \mid x_1) \frac{p_t(x \mid x_1) q(x_1)}{p_t(x)} 
 $$
 
 ![Riemannian FM](/assets/images/rfm/cond_ut.png)
+
+<a name="rfm-vf"></a>
 
 ### 3.2 Vector Fields via Distance Functions
 
@@ -234,6 +243,8 @@ $$
 
 but $$ u_t(x) $$ is now constructed analytically to respect the geometry of the manifold.
 
+<a name="rfm-spectral"></a>
+
 ### 3.3 Approximating Geodesics with Spectral Distances
 
 When $$\exp$$ and $$\log$$ maps are closed-form (e.g., $$\mathbb{S}^2$$, $$\mathbb{T}^d$$, Lie groups), one can directly compute $$x_t$$ without ODE simulation.
@@ -249,6 +260,8 @@ In practice:
 - Use top-$$k$$ eigenfunctions for fast approximation (one-time cost)
 - Diffusion distance requires hyperparameter $$\tau$$, while biharmonic has no tunable hyperparameter
 - Spectral distances yield smooth, robust flows and enable one-step ODE integration during inference
+
+<a name="rfm-results"></a>
 
 ### 3.4 Experimental Results
 
