@@ -180,7 +180,7 @@ EFM shows superior performance in tasks involving highly symmetric distributions
 | **Sampling speed-up** vs naive OT-FM            | —                             | **≈ 3 ×** faster (20 step RK4) | Symmetry handling pays off                                 |
 | **NLL / ESS / Energy histograms**               | Worse                         | **Best on all metrics**        | Numerical accuracy translates to statistical gains         |
 
-#### Alanine dipeptide (Cartesian 15-atom molecule)
+#### Alanine dipeptide (15-dim Cartesian backbone representation)
 
 | Metric                            | OT-FM                                          | **Equivariant OT-FM**                                               | Comment                                         |
 | --------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
@@ -334,20 +334,9 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 
 <a name="outlook"></a>
 
-## 5 · Open Horizons
-
-- Mixing both ideas: equivariant flows **on** manifolds (e.g., permutable atoms on a sphere)
-- Adaptive or learned premetrics
-- Memory-light eigen decomposition for mega-scale meshes
-- Stochastic couplings & Brownian bridges within RFM
+## 5 · Discussions
 
 ---
-
-### Take-home sound-bite
-
-> **EFM** aligns coordinates so external symmetries can’t fool the flow.
-> **RFM** reshapes the notion of “straight” so the flow can live happily on any geometry.
-> Together they turn few-step CNFs from a Euclidean toy into a geometry-aware toolbox.
 
 $$
 $$
