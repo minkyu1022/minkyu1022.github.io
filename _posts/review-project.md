@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "AI810 Blog Post (20258026)"
-date: 2025-05-30
+date: 2025-05-30 10:00:00 +0900
 math: true
 permalink: /blog/review-project/
 ---
