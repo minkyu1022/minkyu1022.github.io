@@ -145,7 +145,7 @@ where $$G$$ is the symmetry group and $$\rho(g)$$ is the group action.
 
 To solve this practically:
 
-- **Translation** symmetry is handled by using **mean-free coordinates**
+- **Translation** symmetry is handled by using **mean-free coordinates** (just remove the mean value)
 - **Permutation** symmetry is handled by the **Hungarian algorithm** to optimally match particle indices
 - **Rotation** symmetry is handled using the **Kabsch algorithm**, which finds the optimal orthogonal alignment between two point clouds
 
