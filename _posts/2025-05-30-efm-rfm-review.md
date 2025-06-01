@@ -369,8 +369,8 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
   – Hungarian O($$N^3$$) may choke on 1000+ interchangeable atoms.
 
 - **RFM**:  
-  – Requires either closed-form ${\exp,\log}$ or Laplacian eigen-solve.<br>
-  – Choice of weighting function $w(\lambda)$ (diffusion vs biharmonic) lacks principled tuning guidelines.
+  – Requires either closed-form $${\exp,\log}$$ or Laplacian eigen-solve.<br>
+  – Choice of weighting function $$w(\lambda)$$ (diffusion vs biharmonic) lacks principled tuning guidelines.
 
 - **Both**:  
   – Deterministic; how to mix with stochastic bridges for better mode coverage?<br>
