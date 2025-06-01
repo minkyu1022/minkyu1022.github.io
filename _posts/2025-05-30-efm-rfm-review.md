@@ -347,7 +347,7 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 ### 5.2 Synergies and hybrid avenues
 
 - **EFM ▸ RFM**  
-  – Extend orbit-aware cost to **manifold-valued but symmetric** data (e.g. proteins on $$$S^2$$ with interchangeable atoms).  
+  – Extend orbit-aware cost to **manifold-valued but symmetric** data (e.g. proteins on $$S^2$$ with interchangeable atoms).  
   – Combine Hungarian/Kabsch with RFM’s geodesic distance.
 
 - **Spectral distances in Euclidean space**  
