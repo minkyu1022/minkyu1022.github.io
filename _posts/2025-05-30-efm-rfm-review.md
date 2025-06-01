@@ -149,6 +149,15 @@ To solve this practically:
 - **Permutation** symmetry is handled by the **Hungarian algorithm** to optimally match particle indices
 - **Rotation** symmetry is handled using the **Kabsch algorithm**, which finds the optimal orthogonal alignment between two point clouds
 
+#### Quick primer — why Hungarian + Kabsch capture the two key symmetries
+
+| Algorithm               | 3-line summary                                                                                                                                                                                                                                                                              | Captures which symmetry?                             | Why it works in EFM                                                                                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hungarian algorithm** | Optimal assignment solver for a cost matrix in $$O(n^3)$$ time. <br> Finds a one-to-one mapping that minimises total cost. <br> Guarantees global optimum for linear-sum problems.                                                                                                          | **Permutation** (which atom ↔ which atom)            | Permuting indices of identical particles just re-orders rows/cols of the cost matrix. Hungarian picks the assignment with minimal pairwise L2 cost $$\|x_0^i - x_1^{\sigma(i)}\|$$. Thus it detects the best **permutation $$\sigma$$** without trying all $$N!$$ possibilities. |
+| **Kabsch algorithm**    | Given two point clouds $$\{p_i\},\{q_i\}$$ with known correspondence, computes the orthogonal matrix $$R$$ (and optional translation) that minimises $$\sum_i\|Rp_i - q_i\|^2$$. <br> Closed-form via SVD of covariance matrix. <br> Produces det$$(R)=+1$$ unless reflections are allowed. | **Rotation / reflection** of the whole configuration | After permutation alignment, the two clouds differ only by a global rigid motion. Kabsch returns the best-fit $$R\in O(D)$$. Applying $$R$$ removes the rotational mismatch, so OT is computed **within the same rotation orbit**.                                               |
+
+> In short: **Hungarian** aligns _which_ points match, **Kabsch** aligns _how_ they are oriented. Together they place $$x_0$$ and $$x_1$$ into a common orbit before OT pairing.
+
 The model uses an **equivariant GNN** architecture designed to respect these group symmetries. The result is a vector field that remains equivariant and produces consistent flow directions under symmetric transformations.
 
 ![Equivariant OT flow matching](/assets/images/efm/eq_OT.png)
@@ -288,54 +297,19 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 
 ## 4 · Summary
 
-<!-- <table>
-  <thead>
-    <tr>
-      <th>Theme</th><th>EFM</th><th>RFM</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>Goal</strong></td>
-      <td>straighten OT paths in ℝⁿ</td>
-      <td>straighten paths <em>inside</em> manifold</td>
-    </tr>
-    <tr>
-      <td><strong>Geometry handle</strong></td>
-      <td>orbit-aligned cost</td>
-      <td>premetric (geodesic / spectral)</td>
-    </tr>
-    <tr>
-      <td><strong>When to use</strong></td>
-      <td>Euclidean data with large symmetry group</td>
-      <td>intrinsic manifolds (sphere, SPD, mesh)</td>
-    </tr>
-    <tr>
-      <td><strong>Training cost</strong></td>
-      <td>Hungarian + Kabsch per batch</td>
-      <td>eigen-solve once (spectral)</td>
-    </tr>
-    <tr>
-      <td><strong>Inference</strong></td>
-      <td>fixed RK4 (~8 steps)</td>
-      <td>0 steps (simple) / few steps (general)</td>
-    </tr>
-  </tbody>
-</table> -->
-
-| **Aspect**                     | **Naive Flow Matching<br>(prior works)**                         | **Equivariant Flow Matching<br>(EFM)**                                                                        | **Riemannian Flow Matching<br>(RFM)**                                                                                                 |
-| ------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ambient space**              | Flat **Euclidean $$\mathbb{R}^n$$**                              | Euclidean $$\mathcal{R}^n$$ with **group symmetries** (translations $$\cup$$ rotations $$\cup$$ permutations) | **General Riemannian manifold** 𝓜 (curved, possibly with boundary)                                                                    |
-| **Ideal vector field $$u_t$$** | Linear / OT displacement <br> $$u_t = \dfrac{x_1 - x_t}{1 - t}$$ | _Same formula_, but **x₀–x₁ pairs are first aligned inside each symmetry orbit**                              | Analytic minimal-norm field <br> $$u_t = \dot{\log\kappa}(t)\,d\,\dfrac{\nabla d}{\|\nabla d\|\_g^{2}}$$ (geodesic or spectral $$d$$) |
-| **OT cost for pairing**        | Plain $$c(x_0,x_1)=\|x_0 - x_1\|^2$$                             | Orbit-aware $$ \tilde c(x*0,x_1)=\min*{g\in G}\|x_0 - \rho(g)x_1\|^2 $$                                       | _No batch OT_ → independent draws; coupling not required                                                                              |
-| **Symmetry handling**          | ❌ None → curved paths                                           | ✓ Translation (mean-free), permutation (Hungarian), rotation (Kabsch)                                         | Handled intrinsically by geometry; external symmetry not the focus                                                                    |
-| **Distance / pre-metric**      | Euclidean $$L_2$$ only                                           | Euclidean $$L_2$$ — **after alignment**                                                                       | Flexible: geodesic, diffusion, biharmonic, …                                                                                          |
-| **Model architecture**         | Standard MLP / GNN                                               | **SE(3) × S(N) equivariant GNN**                                                                              | Any manifold-aware NN; metric only in loss                                                                                            |
-| **Extra training cost**        | None                                                             | Hungarian + Kabsch **per mini-batch**                                                                         | One-time Laplacian eigen-solve (if spectral)                                                                                          |
-| **Inference ODE steps**        | Few-step RK4, may blow up if paths bent                          | 4–8 fixed steps (straighter)                                                                                  | 0 steps (closed-form manifolds) or ≈1–3 steps (spectral)                                                                              |
-| **Typical datasets**           | Toy 2-D Gaussians, simple point clouds                           | LJ-13/LJ-55 clusters, alanine dipeptide                                                                       | $$S^2$$ weather, $$T^2$$ Ramachandran, 7-D torus RNA, bunny mesh, maze                                                                |
-| **Primary win**                | Simpler than likelihood CNFs                                     | **Straightens OT paths under symmetry → faster inference**                                                    | **Extends FM to curved spaces → intrinsic modeling, analytic sampling**                                                               |
-| **Main limitation**            | Breaks under symmetry; Euclidean only                            | Still Euclidean; extra batch OT cost                                                                          | Needs manifold tools (exp/log or Laplacian eigen-solve)                                                                               |
+| **Aspect**                     | **Naive Flow Matching<br>(prior works)**                         | **Equivariant Flow Matching<br>(EFM)**                                                                        | **Riemannian Flow Matching<br>(RFM)**                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Ambient space**              | Flat **Euclidean $$\mathbb{R}^n$$**                              | Euclidean $$\mathcal{R}^n$$ with **group symmetries** (translations $$\cup$$ rotations $$\cup$$ permutations) | **General Riemannian manifold** $$\mathcal{M}$$ (curved, possibly with boundary)                                                     |
+| **Ideal vector field $$u_t$$** | Linear / OT displacement <br> $$u_t = \dfrac{x_1 - x_t}{1 - t}$$ | _Same formula_, but **x₀–x₁ pairs are first aligned inside each symmetry orbit**                              | Analytic minimal-norm field <br> $$u_t = \dot{\log\kappa}(t)\,d\,\dfrac{\nabla d}{\|\nabla d\|_g^{2}}$$ (geodesic or spectral $$d$$) |
+| **OT cost for pairing**        | Plain $$c(x_0,x_1)=\|x_0 - x_1\|^2$$                             | Orbit-aware $$ \tilde c(x*0,x_1)=\min*{g\in G}\|x_0 - \rho(g)x_1\|^2 $$                                       | _No batch OT_ → independent draws; coupling not required                                                                             |
+| **Symmetry handling**          | ❌ None → curved paths                                           | ✓ Translation (mean-free), permutation (Hungarian), rotation (Kabsch)                                         | Handled intrinsically by geometry; external symmetry not the focus                                                                   |
+| **Distance / pre-metric**      | Euclidean $$L_2$$ only                                           | Euclidean $$L_2$$ — **after alignment**                                                                       | Flexible: geodesic, diffusion, biharmonic, …                                                                                         |
+| **Model architecture**         | Standard MLP / GNN                                               | **SE(3) × S(N) equivariant GNN**                                                                              | Any manifold-aware NN; metric only in loss                                                                                           |
+| **Extra training cost**        | None                                                             | Hungarian + Kabsch **per mini-batch**                                                                         | One-time Laplacian eigen-solve (if spectral)                                                                                         |
+| **Inference ODE steps**        | Few-step RK4, may blow up if paths bent                          | 4–8 fixed steps (straighter)                                                                                  | 0 steps (closed-form manifolds) or ≈1–3 steps (spectral)                                                                             |
+| **Typical datasets**           | Toy 2-D Gaussians, simple point clouds                           | LJ-13/LJ-55 clusters, alanine dipeptide                                                                       | $$S^2$$ weather, $$T^2$$ Ramachandran, 7-D torus RNA, bunny mesh, maze                                                               |
+| **Primary win**                | Simpler than likelihood CNFs                                     | **Straightens OT paths under symmetry → faster inference**                                                    | **Extends FM to curved spaces → intrinsic modeling, analytic sampling**                                                              |
+| **Main limitation**            | Breaks under symmetry; Euclidean only                            | Still Euclidean; extra batch OT cost                                                                          | Needs manifold tools (exp/log or Laplacian eigen-solve)                                                                              |
 
 ---
 
