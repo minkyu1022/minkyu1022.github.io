@@ -35,7 +35,9 @@ permalink: /blog/review-project/
 
 # Geometry-Aware Generative Paths: From Group Orbits to Premetrics
 
-**Review of “Equivariant Flow Matching” (NeurIPS 2023) & “Flow Matching on General Geometries” (ICLR 2024)**
+**Review of**
+**“[Equivariant Flow Matching](https://arxiv.org/abs/2306.15030)” (NeurIPS 2023)** , and 
+**“[Flow Matching on General Geometries](https://arxiv.org/abs/2302.03660)” (ICLR 2024)**
 
 > _One fixes crooked paths by aligning external symmetries; the other bends the space itself so every path becomes straight again._
 
