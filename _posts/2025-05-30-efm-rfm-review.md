@@ -347,18 +347,18 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 ### 5.2 Synergies and hybrid avenues
 
 - **EFM ▸ RFM**  
-  – Extend orbit-aware cost to **manifold-valued but symmetric** data (e.g. proteins on $S^2$ with interchangeable atoms).  
+  – Extend orbit-aware cost to **manifold-valued but symmetric** data (e.g. proteins on $$$S^2$$ with interchangeable atoms).  
   – Combine Hungarian/Kabsch with RFM’s geodesic distance.
 
 - **Spectral distances in Euclidean space**  
-  – Even in ℝⁿ, spectral distances (diffusion / biharmonic) can yield _smoother_ vector fields than L₂ for rough point-clouds.
+  – Even in $$\mathbb{R}^n$$, spectral distances (diffusion / biharmonic) can yield _smoother_ vector fields than $$L_2$$ for rough point-clouds.
 
 ### 5.3 Practical tips
 
 1. **Batch size vs symmetry size**  
    Large symmetry orbits ⇒ bigger batches or orbit-aware pairing mandatory.
 2. **Hungarian+Kabsch cost**  
-   Fine for $N\!\lesssim\!100$; for larger $N$ consider approximate solvers (Sinkhorn, auction, ICP).
+   Fine for $$N\!\lesssim\!100$$; for larger $N$ consider approximate solvers (Sinkhorn, auction, ICP).
 3. **Spectral pre-computation**  
    One eigen-solve dominates wall-time; cache eigenfunctions and reuse across epochs.
 
@@ -366,7 +366,7 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 
 - **EFM**:  
   – Still Euclidean; cannot handle curved ambient spaces.<br>
-  – Hungarian O($N^3$) may choke on 1000+ interchangeable atoms.
+  – Hungarian O($$N^3$$) may choke on 1000+ interchangeable atoms.
 
 - **RFM**:  
   – Requires either closed-form ${\exp,\log}$ or Laplacian eigen-solve.<br>
@@ -379,10 +379,10 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 ### 5.5 Future research directions
 
 1. **Geometry-aware stochastic flow matching** (Brownian shortcuts on manifolds).
-2. **Learned pre-metrics**: jointly optimise $w(\lambda)$ or a neural kernel instead of picking diffusion/biharmonic.
+2. **Learned pre-metrics**: jointly optimise $$w(\lambda)$$ or a neural kernel instead of picking diffusion/biharmonic.
 3. **Hardware-friendly symmetry solvers**: GPU Hungarian, differentiable Kabsch layers.
 4. **Probabilistic couplings**: Blend OT plan with noise → smoother training signal.
-5. **Applications**: protein folding on SE(3)×S² manifolds, brain-connectome meshes, climate fields on the sphere.
+5. **Applications**: protein folding on $$SE(3) \times S^2$$ manifolds, brain-connectome meshes, climate fields on the sphere.
 
 > **Bottom line**: EFM fixes crooked paths by respecting _external_ symmetries, while RFM bends the space so that every path becomes straight _intrinsically_. A unified “symmetry-on-manifold” flow would marry the best of both worlds.
 
