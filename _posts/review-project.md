@@ -3,6 +3,7 @@ layout: post
 title: "AI810 Blog Post (20258026)"
 date: 2025-05-30
 math: true
+permalink: /blog/review-project/
 ---
 
 <!-- MathJax for LaTeX rendering -->
