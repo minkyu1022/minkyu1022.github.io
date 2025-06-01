@@ -177,7 +177,7 @@ EFM shows superior performance in tasks involving highly symmetric distributions
 
 | What was measured                               | OT-FM (naive)                 | **Equivariant OT-FM**          | Take-away                                                  |
 | ----------------------------------------------- | ----------------------------- | ------------------------------ | ---------------------------------------------------------- |
-| **⟨Batch transport cost⟩** during training      | **≈10 ×** higher              | Low                            | Orbit‐aware pairing avoids “expensive” cross-orbit matches |
+| **⟨Batch transport cost⟩** during training      | ≈10 × higher              | **Low**                            | Orbit‐aware pairing avoids “expensive” cross-orbit matches |
 | **Median integration-path length** at inference | ≈ 10.2 $$\sigma$$             | **≈ 8.9 $$\sigma$$**           | Flows are almost straight, reducing ODE steps              |
 | **RK4 fixed-step error** with 20 steps          | Large → needs adaptive solver | **Minimal**                    | Straightness ⇒ fixed small step OK                         |
 | **Sampling speed-up** vs naive OT-FM            | —                             | **≈ 3 ×** faster (20 step RK4) | Symmetry handling pays off                                 |
