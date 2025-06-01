@@ -55,7 +55,7 @@ math: true
    - [3.3 Approximating Geodesics with Spectral Distances](#rfm-spectral)
    - [3.4 Experimental Results](#rfm-results)
 4. [Summary](#summary)
-5. [Open Horizons](#outlook)
+5. [Discussions](#discussion)
 
 ---
 
@@ -332,9 +332,59 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 
 ---
 
-<a name="outlook"></a>
+<a name="discussion"></a>
 
-## 5 · Discussions
+## 5. Discussions
+
+### 5.1 When should I use which flow?
+
+| Situation                                                      | Best-suited method      | Rationale                                                                   |
+| -------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------- |
+| **Euclidean data, little or no symmetry**                      | _Vanilla_ Flow Matching | simplest; no Hungarian/Kabsch cost                                          |
+| **Euclidean + large symmetry group** (molecules, point-clouds) | **EFM**                 | orbit-aware cost drastically shortens paths                                 |
+| **Intrinsic manifold data** (angles, meshes, SPD, hyperbolic)  | **RFM**                 | Euclidean straight line is meaningless; geodesic/spectral flows are natural |
+
+### 5.2 Synergies and hybrid avenues
+
+- **EFM ▸ RFM**  
+  – Extend orbit-aware cost to **manifold-valued but symmetric** data (e.g. proteins on $S^2$ with interchangeable atoms).  
+  – Combine Hungarian/Kabsch with RFM’s geodesic distance.
+
+- **Spectral distances in Euclidean space**  
+  – Even in ℝⁿ, spectral distances (diffusion / biharmonic) can yield _smoother_ vector fields than L₂ for rough point-clouds.
+
+### 5.3 Practical tips
+
+1. **Batch size vs symmetry size**  
+   Large symmetry orbits ⇒ bigger batches or orbit-aware pairing mandatory.
+2. **Hungarian+Kabsch cost**  
+   Fine for $N\!\lesssim\!100$; for larger $N$ consider approximate solvers (Sinkhorn, auction, ICP).
+3. **Spectral pre-computation**  
+   One eigen-solve dominates wall-time; cache eigenfunctions and reuse across epochs.
+
+### 5.4 Limitations & open questions
+
+- **EFM**:  
+  – Still Euclidean; cannot handle curved ambient spaces.<br>
+  – Hungarian O($N^3$) may choke on 1000+ interchangeable atoms.
+
+- **RFM**:  
+  – Requires either closed-form ${\exp,\log}$ or Laplacian eigen-solve.<br>
+  – Choice of weighting function $w(\lambda)$ (diffusion vs biharmonic) lacks principled tuning guidelines.
+
+- **Both**:  
+  – Deterministic; how to mix with stochastic bridges for better mode coverage?<br>
+  – Memory footprint of CNFs still higher than score-based samplers.
+
+### 5.5 Future research directions
+
+1. **Geometry-aware stochastic flow matching** (Brownian shortcuts on manifolds).
+2. **Learned pre-metrics**: jointly optimise $w(\lambda)$ or a neural kernel instead of picking diffusion/biharmonic.
+3. **Hardware-friendly symmetry solvers**: GPU Hungarian, differentiable Kabsch layers.
+4. **Probabilistic couplings**: Blend OT plan with noise → smoother training signal.
+5. **Applications**: protein folding on SE(3)×S² manifolds, brain-connectome meshes, climate fields on the sphere.
+
+> **Bottom line**: EFM fixes crooked paths by respecting _external_ symmetries, while RFM bends the space so that every path becomes straight _intrinsically_. A unified “symmetry-on-manifold” flow would marry the best of both worlds.
 
 ---
 
