@@ -315,7 +315,7 @@ RFM is tested on various manifolds (spheres, tori, meshes with boundaries). Key 
 
 ---
 
-<a name="compare"></a>
+<a name="summary"></a>
 
 ## 4 · Summary
 
