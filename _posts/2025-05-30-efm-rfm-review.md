@@ -168,12 +168,29 @@ The model uses an **equivariant GNN** architecture designed to respect these gro
 
 EFM shows superior performance in tasks involving highly symmetric distributions:
 
-- **Lennard-Jones clusters** (LJ-13, LJ-55): produces straighter paths, faster inference
-- **Alanine dipeptide**: matches free energy profiles with fewer ODE steps
-
 ![Experiment results](/assets/images/efm/results.png)
 
-These results demonstrate that symmetry-aware OT cost functions and equivariant architectures allow FM to fully exploit geometric structures in the data.
+#### LJ-55 Lennard-Jones cluster (55 atoms)
+
+| What was measured                               | OT-FM (naive)                 | **Equivariant OT-FM**          | Take-away                                                  |
+| ----------------------------------------------- | ----------------------------- | ------------------------------ | ---------------------------------------------------------- |
+| **⟨Batch transport cost⟩** during training      | **≈10 ×** higher              | Low                            | Orbit‐aware pairing avoids “expensive” cross-orbit matches |
+| **Median integration-path length** at inference | ≈ 10.2 $$\sigma$$             | **≈ 8.9 $$\sigma$$**           | Flows are almost straight, reducing ODE steps              |
+| **RK4 fixed-step error** with 20 steps          | Large → needs adaptive solver | **Minimal**                    | Straightness ⇒ fixed small step OK                         |
+| **Sampling speed-up** vs naive OT-FM            | —                             | **≈ 3 ×** faster (20 step RK4) | Symmetry handling pays off                                 |
+| **NLL / ESS / Energy histograms**               | Worse                         | **Best on all metrics**        | Numerical accuracy translates to statistical gains         |
+
+#### Alanine dipeptide (Cartesian 15-atom molecule)
+
+| Metric                            | OT-FM                                          | **Equivariant OT-FM**                                               | Comment                                         |
+| --------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
+| **Effective sample size (ESS)**   | 0.46 ×                                         | **1 $$\times$$** (baseline)                                         | EFM’s straight paths improve mixing             |
+| **Negative log-likelihood (NLL)** | $$\uparrow$$ (worse)                           | **Best**                                                            | Consistent with ESS                             |
+| **Integration path length**       | Longer, broader                                | **Shorter, concentrated**                                           | Indicates straighter trajectories               |
+| **Ramachandran free-energy**      | Overestimates minima                           | **Matches umbrella-sampling**                                       | Physical faithfulness                           |
+| **Chirality handling**            | Generates both mirror states, longer inference | Equivariant flow respects SO(3) symmetry; reflection can be toggled | Practical benefit when one chirality is desired |
+
+Accounting for permutation + rotation + translation symmetry **reduces mean transport cost by an order of magnitude**, straightens trajectories, and turns a slow, curved OT-FM into a fast sampler that beats or matches likelihood-based baselines on all evaluation metrics.
 
 ---
 
@@ -259,11 +276,13 @@ One of the good choices for the distance function is using **geodesic**.
 
 When $$\exp$$ and $$\log$$ maps are closed-form (e.g., $$\mathbb{S}^2$$, $$\mathbb{T}^d$$, Lie groups), one can directly compute $$x_t$$ without ODE simulation.
 
-In general manifolds, geodesics are costly to compute, so RFM proposes **spectral distances** (e.g., diffusion and biharmonic distances) as approximations. These are derived from Laplace-Beltrami eigenfunctions:
+In general manifolds, geodesics are costly to compute, so RFM proposes **spectral distances** (e.g., diffusion and biharmonic distances) as approximations with some monotonically decreasing weighting function $$w : \mathbb{R} \rightarrow \mathbb{R}_{+}$$:
 
 $$
-d_w(x, y)^2 = \sum_{i=1}^{\infty} w(\lambda_i)(\varphi_i(x) - \varphi_i(y))^2.
+d_w(x, y)^2 = \sum_{i=1}^{\infty} w(\lambda_i)(\varphi_i(x) - \varphi_i(y))^2,
 $$
+
+where $$\varphi_i : \mathcal{M} \rightarrow \mathbb{R}$$ are the eigenfunctions of the Laplace-Beltrami operator $$\nabla_g$$ over $$\mathcal{M}$$ with corresponding eigenvaluse $$\lambda_i$$, i.e. $$\nabla_g \varphi_i = \lambda_i \varphi_i$$.
 
 In practice:
 
